@@ -30,6 +30,8 @@ def appendNewDatapoints(concept, _df):
     filename = 'ddf--datapoints--{concept}--by--basomrade--year.csv'.format(concept=concept)
     previousPath = os.path.join(ddfSrcPath, filename)
     previousData = pd.read_csv(previousPath)
+    _df = _df[['basomrade', 'year', 'value']]
+    _df = _df.rename(columns = {'value': concept})
     combined = pd.concat([previousData, _df], sort=False)
     path = os.path.join(ddfOutputPath, filename)
     silentremove(path)
@@ -44,7 +46,6 @@ def byGender(concept, _df):
 
         dfgen = _df[_df['Kön'] == gender]
         dfgen = dfgen[['basomrade', 'year', 'value']]
-        dfgen = dfgen.rename(columns = {'value': conceptgender})
 
         appendNewDatapoints(conceptgender, dfgen)
 
