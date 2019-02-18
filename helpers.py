@@ -37,18 +37,22 @@ def appendNewDatapoints(concept, _df):
     silentremove(path)
     combined.to_csv(path, index=False)
     print('Saved {concept} to {path}\n'.format(concept=concept, path=path))
+    combined = combined.rename(columns={concept: 'value'})
+    return combined
 
 def byGender(concept, _df):
     genders = _df['Kön'].cat.categories.tolist()
 
+    combinedGenders = []
     for gender in genders:
         conceptgender = '{concept}_{gender}'.format(concept=concept,gender=gender)
 
         dfgen = _df[_df['Kön'] == gender]
         dfgen = dfgen[['basomrade', 'year', 'value']]
 
-        appendNewDatapoints(conceptgender, dfgen)
-
+        combined = appendNewDatapoints(conceptgender, dfgen)
+        combinedGenders.append(combined)
+    return combinedGenders[0], combinedGenders[1]
 
 baskodkey = pd.read_excel(os.path.join(ddfRootPath, 'etl', 'source', '161115 A7 utan formler.xlsx'), skiprows=[0,1,2,3,4,5,6], converters={2010: lambda x: str(x)})
 baskodkey = baskodkey[[2010, 'BASKOD2000']]
@@ -67,3 +71,8 @@ def baskod2010tobasomrade(_df):
     _df = pd.merge(_df, entityKey[['BASKOD2000', 'basomrade']], on='BASKOD2000', how='left')
     _df = _df.dropna(how='any')
     return _df
+
+def plotcombined(combined, name='value'):
+    combined = combined.rename(columns={'value': name})
+    combined['year'] = pd.to_datetime(combined['year'].astype('str'))
+    (combined.groupby('year').sum()[name]).plot(legend=True)
