@@ -25,6 +25,18 @@ def silentremove(filename):
         if e.errno != errno.ENOENT:
             raise
 
+# Read and format the MASTER*.xlsx file
+def readMaster():
+    master = pd.read_excel(os.path.join(indataPath, 'MASTER_00-17.xlsx'))
+    # byt namn på kolumner för att matcha namnen i ddf-filerna
+    master = master.rename(columns={
+        'område': 'name',
+        'Basområde': 'BASKODER', # kolumnen Basområde blandar BK2010 och BK2000
+        'tid': 'year'
+    })
+    master['year'] = pd.to_datetime(master['year'].astype(str))
+    return master
+
 # Append new data to concept. Return the combined datasets for plotting.
 def appendNewDatapoints(concept, _df):
     filename = 'ddf--datapoints--{concept}--by--basomrade--year.csv'.format(concept=concept)
@@ -71,7 +83,7 @@ entityKey = entityKey[['basomrade', 'BASKOD2000']]
 def baskod2010tobasomrade(_df):
     _df = pd.merge(_df, baskodkey, on='BASKOD2010', how='left')
     _df = pd.merge(_df, entityKey[['BASKOD2000', 'basomrade']], on='BASKOD2000', how='left')
-    _df = _df.dropna(how='any')
+    _df = _df.dropna(subset=['basomrade'])
     return _df
 
 # Plot timeseries of the combined old+update dataframes.
