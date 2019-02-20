@@ -48,7 +48,7 @@ def appendNewDatapoints(concept, _df):
     path = os.path.join(ddfOutputPath, filename)
     silentremove(path)
     combined.to_csv(path, index=False)
-    print('Saved {concept} to {path}\n'.format(concept=concept, path=path))
+    # print('Saved {concept} to {path}\n'.format(concept=concept, path=path))
     combined = combined.rename(columns={concept: 'value'})
     return combined
 
@@ -88,7 +88,7 @@ def baskod2010tobasomrade(_df):
 
 # Plot timeseries of the combined old+update dataframes.
 # Sums all values, rates won't mean much. The point is to get a quick visual indication of errors, such as sudden jumps between last year in old data and first year in the new data.
-def plotcombined(combined, name='value'):
+def plotcombined(combined, name='value', title=None):
     combined = combined.rename(columns={'value': name})
     combined['year'] = pd.to_datetime(combined['year'].astype('str'))
-    (combined.groupby('year').sum()[name]).plot(legend=True)
+    (combined.groupby('year').mean()[name]).plot(legend=True, title=title)
