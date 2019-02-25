@@ -9,7 +9,7 @@ ddfRootPath = os.path.join(indataPath, "ddf--sodertornsmodellen")
 ddfSrcPath = os.path.join(ddfRootPath, "ddf--sodertornsmodellen--src")
 superPath = os.path.join(indataPath, "supermappen")
 # output
-ddfOutputPath = os.path.join(os.pardir, 'ddf--sodertornsmodellen-output', 'ddf--sodertornsmodellen--src')
+ddfOutputPath = os.path.join(os.pardir, 'ddf--sodertornsmodellen-new', 'ddf--sodertornsmodellen--src')
 
 # Ta året ur filnamnen i supermappen
 def getYear(fileName):
@@ -38,22 +38,26 @@ def readMaster():
     return master
 
 # Append new data to concept. Return the combined datasets for plotting.
-def appendNewDatapoints(concept, _df):
+# new: are there existing datapoints that should be updated, or is this a new dataset
+def appendNewDatapoints(concept, _df, new=False):
     filename = 'ddf--datapoints--{concept}--by--basomrade--year.csv'.format(concept=concept)
-    previousPath = os.path.join(ddfSrcPath, filename)
-    previousData = pd.read_csv(previousPath)
     _df = _df[['basomrade', 'year', 'value']]
     _df = _df.rename(columns = {'value': concept})
-    combined = pd.concat([previousData, _df], sort=False)
+    if new:
+        df = _df
+    else:
+        previousPath = os.path.join(ddfSrcPath, filename)
+        previousData = pd.read_csv(previousPath)
+        df = pd.concat([previousData, _df], sort=False)
     path = os.path.join(ddfOutputPath, filename)
     silentremove(path)
-    combined.to_csv(path, index=False)
+    df.to_csv(path, index=False)
     # print('Saved {concept} to {path}\n'.format(concept=concept, path=path))
-    combined = combined.rename(columns={concept: 'value'})
-    return combined
+    df = df.rename(columns={concept: 'value'})
+    return df
 
 # Append new data to concept by gender.
-def byGender(concept, _df):
+def byGender(concept, _df, new=False):
     genders = _df['Kön'].cat.categories.tolist()
 
     combinedGenders = []
@@ -63,7 +67,7 @@ def byGender(concept, _df):
         dfgen = _df[_df['Kön'] == gender]
         dfgen = dfgen[['basomrade', 'year', 'value']]
 
-        combined = appendNewDatapoints(conceptgender, dfgen)
+        combined = appendNewDatapoints(conceptgender, dfgen, new)
         combinedGenders.append(combined)
     return combinedGenders[0], combinedGenders[1]
 
@@ -75,7 +79,7 @@ baskodkey['BASKOD2010'] = baskodkey['BASKOD2010'].astype(str).astype(int)
 
 # Lookup table between BASKOD2000 and the baskod entity id.
 entityKey = pd.read_csv(os.path.join(ddfOutputPath, 'ddf--entities--basomrade.csv'))
-entityKey = entityKey.rename(columns={'baskod2000': 'BASKOD2000'})
+entityKey = entityKey.rename(columns={'baskod2010': 'BASKOD2000'})
 entityKey['basomrade'] = entityKey['basomrade'].astype(str)
 entityKey = entityKey[['basomrade', 'BASKOD2000']]
 
@@ -88,7 +92,7 @@ def baskod2010tobasomrade(_df):
 
 # Plot timeseries of the combined old+update dataframes.
 # Sums all values, rates won't mean much. The point is to get a quick visual indication of errors, such as sudden jumps between last year in old data and first year in the new data.
-def plotcombined(combined, name='value', title=None):
+def plotcombined(combined, name='value', title=''):
     combined = combined.rename(columns={'value': name})
     combined['year'] = pd.to_datetime(combined['year'].astype('str'))
-    (combined.groupby('year').mean()[name]).plot(legend=True, title=title)
+    (combined.groupby('year').mean()[name]).plot(legend=True, title='{title} (mean per basomrade)'.format(title=title))
