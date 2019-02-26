@@ -92,7 +92,7 @@ def baskod2010tobasomrade(_df):
     return _df
 
 # Plot timeseries of the combined old+update dataframes.
-# Sums all values, rates won't mean much. The point is to get a quick visual indication of errors, such as sudden jumps between last year in old data and first year in the new data.
+# The point is to get a quick visual indication of errors, such as sudden jumps between last year in old data and first year in the new data.
 def plotcombined(combined, name='value', title=''):
     combined = combined.rename(columns={'value': name})
     combined['year'] = pd.to_datetime(combined['year'].astype('str'))
