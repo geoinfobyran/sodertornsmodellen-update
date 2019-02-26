@@ -39,7 +39,7 @@ def readMaster():
 
 # Append new data to concept. Return the combined datasets for plotting.
 # new: are there existing datapoints that should be updated, or is this a new dataset
-def appendNewDatapoints(concept, _df, new=False):
+def appendNewDatapoints(concept, _df, new=False, write=True):
     filename = 'ddf--datapoints--{concept}--by--basomrade--year.csv'.format(concept=concept)
     _df = _df[['basomrade', 'year', 'value']]
     _df = _df.rename(columns = {'value': concept})
@@ -51,7 +51,8 @@ def appendNewDatapoints(concept, _df, new=False):
         df = pd.concat([previousData, _df], sort=False)
     path = os.path.join(ddfOutputPath, filename)
     silentremove(path)
-    df.to_csv(path, index=False)
+    if(write):
+        df.to_csv(path, index=False)
     # print('Saved {concept} to {path}\n'.format(concept=concept, path=path))
     df = df.rename(columns={concept: 'value'})
     return df
