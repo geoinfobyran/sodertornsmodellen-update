@@ -50,8 +50,8 @@ def appendNewDatapoints(concept, _df, new=False, write=True):
         previousData = pd.read_csv(previousPath)
         df = pd.concat([previousData, _df], sort=False)
     path = os.path.join(ddfOutputPath, filename)
-    silentremove(path)
     if(write):
+        silentremove(path)
         df.to_csv(path, index=False)
     # print('Saved {concept} to {path}\n'.format(concept=concept, path=path))
     df = df.rename(columns={concept: 'value'})
