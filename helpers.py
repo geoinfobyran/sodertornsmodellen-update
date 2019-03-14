@@ -90,6 +90,10 @@ def baskod2010tobasomrade(_df):
     _df = pd.merge(_df, entityKey[['BASKOD2000', 'basomrade']], on='BASKOD2000', how='left')
     _df = _df.dropna(subset=['basomrade'])
     return _df
+def baskod2000tobasomrade(_df):
+    _df = pd.merge(_df, entityKey[['BASKOD2000', 'basomrade']], on='BASKOD2000', how='left')
+    _df = _df.dropna(subset=['basomrade'])
+    return _df
 
 # Plot timeseries of the combined old+update dataframes.
 # The point is to get a quick visual indication of errors, such as sudden jumps between last year in old data and first year in the new data.
