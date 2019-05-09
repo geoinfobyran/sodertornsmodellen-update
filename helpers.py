@@ -42,6 +42,7 @@ def readMaster():
 def appendNewDatapoints(concept, _df, new=False, write=True):
     filename = 'ddf--datapoints--{concept}--by--basomrade--year.csv'.format(concept=concept)
     _df = _df[['basomrade', 'year', 'value']]
+    # _df = _df.groupby(['basomrade', 'year']).sum(numeric_only=True, skipna=False).reset_index() # Make sure that split basomraden gets summed to one
     _df = _df.rename(columns = {'value': concept})
     if new:
         df = _df
@@ -85,14 +86,38 @@ entityKey['basomrade'] = entityKey['basomrade'].astype(str)
 entityKey = entityKey[['basomrade', 'BASKOD2000']]
 
 # Use the above lookup tables to go from BASKOD2010 to baskod entity id.
-def baskod2010tobasomrade(_df):
+def sumByBasomradeYear(_df,  n_numeric):
+    _df = _df.groupby(list(_df.columns[:-n_numeric])).sum(numeric_only=True).reset_index() # Make sure that split basomraden gets summed to one
+    return _df
+
+def moveColumns(_df, n_numeric=1):
+    # move columns around, numeric columns must be last
+    baskoder = list(_df.columns[-2:])
+    kolumner = list(_df.columns[:-2])
+    kolumner[-n_numeric:-n_numeric] = baskoder
+    _df = _df[kolumner]
+    return _df
+
+def baskod2010tobasomrade(_df, n_numeric=1):
     _df = pd.merge(_df, baskodkey, on='BASKOD2010', how='left')
     _df = pd.merge(_df, entityKey[['BASKOD2000', 'basomrade']], on='BASKOD2000', how='left')
     _df = _df.dropna(subset=['basomrade'])
+    # # move columns around
+    # baskoder = list(_df.columns[-2:])
+    # kolumner = list(_df.columns[:-2])
+    # kolumner[-n_numeric:-n_numeric] = baskoder
+    # _df = _df[kolumner]
+    _df = moveColumns(_df, n_numeric)
+    _df = _df.drop(['BASKOD2010', 'BASKOD2000'], axis=1, errors='ignore')
+    _df = sumByBasomradeYear(_df, n_numeric)
     return _df
-def baskod2000tobasomrade(_df):
+
+def baskod2000tobasomrade(_df, n_numeric=1):
     _df = pd.merge(_df, entityKey[['BASKOD2000', 'basomrade']], on='BASKOD2000', how='left')
     _df = _df.dropna(subset=['basomrade'])
+    _df = moveColumns(_df, n_numeric)
+    _df = _df.drop(['BASKOD2010', 'BASKOD2000'], axis=1, errors='ignore')
+    _df = sumByBasomradeYear(_df, n_numeric)
     return _df
 
 # Plot timeseries of the combined old+update dataframes.
